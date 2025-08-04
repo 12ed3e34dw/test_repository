@@ -8,12 +8,12 @@ export async function POST(req: Request) {
     const user = users.find(u => u.email === email);
 
     if (!user) {
-        return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+        return NextResponse.json({ error: 'Недействительные учетные данные' }, { status: 401 });
     }
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-        return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+        return NextResponse.json({ error: 'Недействительные учетные данные' }, { status: 401 });
     }
 
     const secret = process.env.JWT_SECRET;

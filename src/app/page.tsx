@@ -62,7 +62,7 @@ export default function Home() {
 
   return (
       <main style={styles.main}>
-        <h1 style={styles.title}>Next.js JWT Auth</h1>
+        <h1 style={styles.title}>JWT Auth</h1>
         <div style={styles.form}>
           <input
               value={email}
