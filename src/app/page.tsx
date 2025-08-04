@@ -1,46 +1,64 @@
 'use client';
+
 import { useState } from "react";
-import Profile from '../page/Profile';
+import { useRouter } from 'next/navigation';
+
 export default function Home() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [token, setToken] = useState('');
-  const [profile, setProfile] = useState<any>(null);
+
+  const router = useRouter();
 
   const register = async () => {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    alert(data.message || data.error);
-  };
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
 
-  const login = async () => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (data.token) {
-      setToken(data.token);
-     // alert('Login successful!');
-      <Profile/>
-    } else {
-      alert(data.error);
+      const data = await res.json();
+
+      if (res.ok) {
+        // успешная регистрация
+        router.push(`/profile?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
+      } else {
+        // ошибка, которую вернул сервер
+        alert(data.error || 'Неизвестная ошибка');
+      }
+    } catch (error) {
+      console.error('Ошибка при регистрации:', error);
+      // @ts-ignore
+      alert('Ошибка клиента или сети: ' + error.message);
     }
   };
 
-  const loadProfile = async () => {
-    const res = await fetch('/api/auth/me', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    setProfile(data.user || null);
-    alert(JSON.stringify(data));
+
+
+  const login = async () => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.token) {
+        setToken(data.token);
+        router.push(`/profile?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
+      } else {
+        alert(data.error || 'Неизвестная ошибка');
+      }
+    } catch (error) {
+      console.error('Ошибка при логине:', error);
+      // @ts-ignore
+      alert('Ошибка клиента или сети: ' + error.message);
+    }
   };
+
 
   return (
       <main style={styles.main}>
@@ -62,22 +80,8 @@ export default function Home() {
           <div style={styles.buttonGroup}>
             <button onClick={register} style={styles.button}>Register</button>
             <button onClick={login} style={styles.button}>Login</button>
-            <button onClick={loadProfile} disabled={!token} style={{
-              ...styles.button,
-              backgroundColor: token ? '#4CAF50' : '#aaa',
-              cursor: token ? 'pointer' : 'not-allowed'
-            }}>
-              Load Profile
-            </button>
           </div>
         </div>
-
-        {profile && (
-            <div style={styles.profileBox}>
-              <h3>Profile:</h3>
-              <pre style={styles.profileText}>{JSON.stringify(profile, null, 2)}</pre>
-            </div>
-        )}
       </main>
   );
 }
@@ -126,18 +130,5 @@ const styles = {
     borderRadius: 8,
     fontSize: 16,
     cursor: 'pointer'
-  },
-  profileBox: {
-    marginTop: 30,
-    background: '#fff',
-    padding: 20,
-    borderRadius: 12,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-    width: '100%',
-    maxWidth: 400
-  },
-  profileText: {
-    fontSize: 14,
-    color: '#333'
   }
 };
